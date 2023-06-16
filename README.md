@@ -1,4 +1,4 @@
-# Nested-Library-Analysis
+# Nested-Library-Analysis (NLA)
 Nested-Library Analysis incorporating with Empirical Dynamic Modeling
 
 The purpose of this project is to detect abrupt shifts in dynamics of chaotic natural systems with time series data.
