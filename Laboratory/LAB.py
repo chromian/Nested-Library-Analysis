@@ -317,6 +317,13 @@ if __name__ == "__main__":
     _ = tax1.plot([], [], color = 'g', label = r"$\widetilde{\ \,\mathtt{RMSE}}$")
     tax1.legend(loc = 'upper left')
     plt.show()
+    # Apply the CPMs on the example of PDO index for comparison
+    CPMres  = {"Student":  detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Student', valley_check = False).year,
+               "Bartlett": detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Bartlett', valley_check = False).year,
+               "Mann-Whitney": detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Mann-Whitney', valley_check = False).year,
+               "Kolmogorov-Smirnov": detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Kolmogorov-Smirnov', valley_check = False).year}
+    print("Results of CPM on the example of PDO index (for comparison).")
+    print(pd.Series(CPMres))
     # for thesis # -- Figure 3-2
     # s_ME    = 0.05
     ComprDF = {}
