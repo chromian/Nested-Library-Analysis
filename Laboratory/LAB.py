@@ -9,6 +9,7 @@ from CyNLA import *
 from CyNLA import __product as product
 from seaborn import heatmap, kdeplot, histplot, color_palette
 import matplotlib.pyplot    as plt
+from matplotlib import cm
 import matplotlib as mpl; mpl.use('tkagg') ## for Mac
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter
 # R functions
@@ -123,25 +124,29 @@ def Visualize( SEED,
                     vmin = -1.5, vmax = 1.5,
                     ax = tax,
                     linewidths = -1)
-        _ = tax.set_yticklabels([])
-        _ = tax.set_yticks([])
-        _ = tax.set_ylabel("")
+        # _ = tax.set_yticklabels([])
+        # _ = tax.set_yticks([])
+        _ = tax.set_ylabel(r"trial ($n$)")
         tax.xaxis.set_ticks_position("top")
         tax.xaxis.set_label_position("top")
         for T in rawS:
             _ = ax.plot(np.arange(len(rawS)) + .5, rawS[T].values, color = 'g',
-                        marker = 'o', lw = 0, markersize = 3, mfc = 'none', alpha = .05, label = "")
+                        marker = 'o', lw = 0, markersize = 3, mfc = 'none', alpha = 1, label = "")
             _ = ax.plot(np.arange(len(tilS)) + .5, tilS[T].values, color = 'g',
-                        alpha = .1, label = "")
+                        alpha = 1, label = "")
         #_ = ax.plot(np.arange(len(rawS)) + .5, np.diag(rawS), color = 'g', marker = 'o', lw = 0, markersize = 3, label = "")
-        _ = tax.plot([], [], color = 'g', marker = 'o', lw = 0, markersize = 3, mfc = 'none', alpha = 1, label = r"$\mathtt{RMSE}$")
-        _ = tax.plot([], [], color = 'g', alpha = 1, label = r"$\widetilde{\ \,\mathtt{RMSE}}$")
+        _ = ax.plot([], [], color = 'g', marker = 'o', lw = 0, markersize = 3, mfc = 'none', alpha = 1, label = r"$\mathtt{RMSE}_n(t)$")
+        _ = ax.plot([], [], color = 'g', alpha = 1, label = r"$\widetilde{\,\mathtt{RMSE}}_n(t)$")
+        _ = ax.scatter([], [], color = cm.bone(1/6), marker = 's', alpha = 0.4, label = r"$\frac{d}{dt}\widetilde{\,\mathtt{RMSE}}_n(t) < 0$")
+        _ = ax.scatter([], [], color = cm.bone(5/6), marker = 's', alpha = 0.6, label = r"$\frac{d}{dt}\widetilde{\,\mathtt{RMSE}}_n(t) > 0$")
         _ = ax.set_xlabel("time")
-        tax.legend(loc = "upper right")
-        ax0.set_xlim(-20, 1020)
+        _ = ax.set_ylabel("prediction error")
+        ax.legend(loc = "upper right")
+        ax.set_xlim(-20, 1020)
         tax.set_xlim(-20/SKIPSTEP, 1020/SKIPSTEP)
-        _ = tax.set_xticklabels(tax.get_xticklabels()[::5])
         _ = tax.set_xticks(np.array(tax.get_xticks()[::5]))
+        # TL = tax.get_xticklabels().copy()
+        # _ = tax.set_xticklabels(TL[::5])
         fig.set_tight_layout(True)
         plt.show()
         return fig
@@ -180,6 +185,7 @@ def summary( T_c, s_PE, s_ME, SKIPSTEP, SIGMA ):
         signS          = nla.Signal_from_rawS( DF[SEED].unstack().T, SIGMA )[-1].apply(np.sign)
         resTable[SEED] = signS.apply(detectCP).median() # mean or median?
     return resTable
+
 
 if __name__ == "__main__":
     trueTc = 300
@@ -303,27 +309,23 @@ if __name__ == "__main__":
                 ax = tax1,
                 linewidths = -1)
     for LB in list(rawS):
-        _ = ax1.plot( Index + .5, rawS[LB], color = 'g', marker = 'o', lw = 0, markersize = 3, mfc = 'none', alpha = .05, label = "" )
-        _ = ax1.plot( Index + .5, tilS[LB], color = 'g', lw = 0.6, alpha = .05, label = "" )
+        _ = ax1.plot( Index + .5, rawS[LB], color = 'g', marker = 'o', lw = 0, markersize = 3, mfc = 'none', alpha = .85, label = "" )
+        _ = ax1.plot( Index + .5, tilS[LB], color = 'g', lw = 0.6, alpha = .85, label = "" )
     ax1.set_xlim(0, ShrkFrom // 12)
-    _ = ax1.set_xticklabels(series.index.year[rawS.index[::10]])
+    _ = ax1.set_xticklabels(series.index.year[rawS.index])
     _ = ax1.set_xticks(np.array(ax1.get_xticks()[::10]))
     _ = tax1.set_yticks([])
     ax0.set_xlim(series.index[0] - np.timedelta64(6, 'Y'), series.index[ShrkFrom] + np.timedelta64(6, 'Y'))
     ax1.set_xlim(-487/6 +8/12, 57 +8/12)
     ax1.set_xlabel('time')
-    tax1.set_ylabel(None)
+    ax1.set_ylabel('prediction error')
+    tax1.set_ylabel('trial (n)')
     _ = tax1.plot([], [], color = 'g', marker = 'o', lw = 0, markersize = 3, mfc = 'none', label = "RMSE")
     _ = tax1.plot([], [], color = 'g', label = r"$\widetilde{\ \,\mathtt{RMSE}}$")
+    _ = tax1.scatter([], [], color = cm.bone(1/6), marker = 's', alpha = 0.4, label = r"$\frac{d}{dt}\widetilde{\,\mathtt{RMSE}}_n(t) < 0$")
+    _ = tax1.scatter([], [], color = cm.bone(5/6), marker = 's', alpha = 0.6, label = r"$\frac{d}{dt}\widetilde{\,\mathtt{RMSE}}_n(t) > 0$")
     tax1.legend(loc = 'upper left')
     plt.show()
-    # Apply the CPMs on the example of PDO index for comparison
-    CPMres  = {"Student":  detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Student', valley_check = False).year,
-               "Bartlett": detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Bartlett', valley_check = False).year,
-               "Mann-Whitney": detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Mann-Whitney', valley_check = False).year,
-               "Kolmogorov-Smirnov": detectCP(series['1950-01-01':'2000-12-01'], _cpmType = 'Kolmogorov-Smirnov', valley_check = False).year}
-    print("Results of CPM on the example of PDO index (for comparison).")
-    print(pd.Series(CPMres))
     # for thesis # -- Figure 3-2
     # s_ME    = 0.05
     ComprDF = {}
@@ -344,6 +346,18 @@ if __name__ == "__main__":
                     cumulative = True, fill = False, ax = axes[1], legend = True, palette = chromianpalette[::-1])
     axes[0].set_ylabel(r"Strength of measurement error ($\sigma^2$)")
     fig.savefig("ErrorRobustness.png", dpi = 600)
+    #
+    rMSE = {}
+    for s_ME in np.arange(0,  0.3+np.finfo(float).eps, 0.05).round(2):
+        DFYs     = pd.DataFrame(np.array([ Run_and_Return(seed, trueTc, 0.05, s_ME, 10, True)[:500, 1] for seed in np.arange(4000, 4200) ]).T,
+                                columns = np.arange(4000, 4200))
+        NLAres   = pd.Series(summary( trueTc, .05, s_ME, 10, 3 )).values
+        ComprDFY = pd.DataFrame({"NLA": pd.Series(NLAres, index = np.arange(4000, 4200)),
+                                 "Student": DFYs.apply(lambda res: detectCP(pd.Series(res), _cpmType = 'Student', valley_check = False)),
+                                 "Bartlett": DFYs.apply(lambda res: detectCP(pd.Series(res), _cpmType = 'Bartlett', valley_check = False)),
+                                 "Mann-Whitney": DFYs.apply(lambda res: detectCP(pd.Series(res), _cpmType = 'Mann-Whitney', valley_check = False)),
+                                 "Kolmogorov-Smirnov": DFYs.apply(lambda res: detectCP(pd.Series(res), _cpmType = 'Kolmogorov-Smirnov', valley_check = False))})
+        rMSE[s_ME] = np.sqrt( ((ComprDFY - trueTc) ** 2).mean(axis = 0) / (~ComprDFY.isna()).sum(axis = 0) )
     plt.show()
     # for Appendix B
     os.chdir("./onX/")
