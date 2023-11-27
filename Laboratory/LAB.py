@@ -407,5 +407,21 @@ if __name__ == "__main__":
     plt.show()
     # Summary
     print( pd.concat([CPDF.agg(['count', 'median', 'mean', 'std']).T for CPDF in [CompDFX, ComprDF, CompDFZ]], axis = 1) )
+    ###############################################################
+    # -- False Positive Rate
+    s_ME = 0.05
+    for SEED in np.arange(4000, 4200):
+        s_PE = 0.05 # strength of process error
+       _ = CUR( SEED, T_c = 1010, s_ProcessError = s_PE, s_MeasureError = s_ME )
+    TPFP_sigma = {}
+    tpfp = {}
+    for _sig_ in [0.5, 1, 1.5, 2, 3]:
+        TFs =  pd.Series(summary(300, 0.05, 0.05, 10, _sig_))
+        FPs =  pd.Series(summary(1010, 0.05, 0.05, 10, _sig_))
+        np.random.seed(1000)
+        print(_sig_)
+        tpfp[_sig_] = ((1 - TFs.isna().sum()/len(TFs)), (FPs.isna().sum()/len(FPs)))
+    print(pd.DataFrame(tpfp, columns = ["True Positive Rate", "False Positive Rate"]))
+    
 
 # === END OF THE SCRIPT === #
